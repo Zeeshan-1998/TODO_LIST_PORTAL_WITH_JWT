@@ -1,0 +1,290 @@
+body {
+  background-color: #f5f5f5;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.page {
+  text-align: center;
+  padding: 20px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  transition: border-color 0.3s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #888;
+}
+
+.btn {
+  display: inline-block;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background-color: #a71d2a;
+}
+
+.logout-button {
+  margin-top: 20px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Additional Styles for ProtectedRoute */
+.protected-route {
+  margin-top: 10%;
+  border: 1px solid #dc3545; /* Use the same border color as the protected form */
+  border-radius: 5px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.protected-route p {
+  margin-bottom: 10px;
+}
+
+/* Additional Styles for Form Headings */
+.form-heading {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.form-heading h2 {
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.error-popup {
+  position: absolute;
+  top: 5%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #ffcccc;
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+.error-message {
+  color: red;
+  font-weight: bold;
+  margin: 0;
+}
+
+.success-popup {
+  position: absolute;
+  top: 5%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #dff0d8;
+  padding: 10px 20px;
+  border-radius: 5px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.success-message {
+  color: #3c763d;
+  font-weight: bold;
+  margin: 0;
+}
+
+.password-input {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #000;
+  opacity: 0.5; /* Added opacity to make the button less prominent */
+  transition: opacity 0.3s ease;
+}
+
+.toggle-password:hover {
+  opacity: 1; /* Increase opacity on hover */
+  color: #888;
+}
+
+.toggle-password:focus {
+  outline: none; /* Remove outline on focus */
+}
+
+/* Footer Styles */
+.footer {
+  margin-top: 20px;
+  background-color: #f5f5f5;
+  color: #333;
+  padding: 20px;
+  text-align: center;
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer .copyright {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #777;
+}
+
+/* TodoList Styles */
+.todo-list {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f5f5f5;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+}
+
+.todo-list h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.add-todo {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.add-todo input {
+  flex-grow: 1;
+  margin-top: 22px;
+  margin-right: 10px;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  transition: border-color 0.3s ease;
+  font-size: 16px;
+}
+
+.add-todo input:focus {
+  outline: none;
+  border-color: #888;
+}
+
+.todo-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.todo-content {
+  flex-grow: 1;
+  font-size: 18px;
+  color: #333;
+}
+
+.todo-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-info {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+@media screen and (max-width: 480px) {
+  .todo-list {
+    padding: 10px;
+  }
+
+  .todo-items {
+    margin-top: 2rem;
+  }
+
+  .todo-item {
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+
+  .add-todo input {
+    padding: 8px;
+  }
+
+  .todo-content {
+    font-size: 16px;
+  }
+
+  .btn {
+    font-size: 12px;
+  }
+}
