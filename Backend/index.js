@@ -7,11 +7,11 @@ const session = require("express-session");
 
 const app = express();
 const pool = new Pool({
-  user: "postgres",
-  password: "abc@123",
+  user: "username",
+  password: "password",
   host: "localhost",
   port: 5432,
-  database: "postgres",
+  database: "db name",
 });
 
 // Middleware to parse JSON
