@@ -11,7 +11,7 @@ const pool = new Pool({
   password: "abc@123",
   host: "localhost",
   port: 5432,
-  database: "bookportal",
+  database: "postgres",
 });
 
 // Middleware to parse JSON
@@ -112,7 +112,7 @@ app.post("/register", async (req, res) => {
     // Store the token in the session
     req.session.token = token;
 
-    res.status(201).json({ token, user });
+    res.status(201).json({ token, user, message: "User Created Successfully"});
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
