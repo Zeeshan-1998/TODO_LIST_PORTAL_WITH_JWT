@@ -137,8 +137,14 @@ app.post("/login", async (req, res) => {
     const result = await pool.query(getUserQuery, values);
     const user = result.rows[0];
 
+    const userData = {};
+
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
+    }
+    else {
+      userData.username = user.username;
+      userData.email = user.email;
     }
 
     // Compare the password hash
@@ -156,7 +162,7 @@ app.post("/login", async (req, res) => {
     // Store the token in the session
     req.session.token = token;
 
-    res.json({ token, user });
+    res.status(201).json({ status: 201, message: "Login Successful", token, userData });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });

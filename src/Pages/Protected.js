@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import TodoList from "../Components/TodoList";
+import { logoutUser } from "../Routes/ApiRoutes";
 
 function Protected({
   token,
@@ -12,6 +13,7 @@ function Protected({
   handleUpdateTodo,
   handleDeleteTodo,
 }) {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -23,6 +25,17 @@ function Protected({
     fetchData();
     // eslint-disable-next-line
   }, []);
+
+  const handleLogoutFunction = async () => {
+    try {
+      handleLogout();
+      await logoutUser();
+      sessionStorage.removeItem("token");
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   if (isLoading) {
     return <p>Loading...</p>;
@@ -37,7 +50,7 @@ function Protected({
         <button onClick={handleProtected} className="btn btn-primary mt-3">
           Access Protected Route
         </button>
-        <button onClick={handleLogout} className="btn btn-danger mt-3">
+        <button onClick={handleLogoutFunction} className="btn btn-danger mt-3">
           Logout
         </button>
         <div className="mt-5">

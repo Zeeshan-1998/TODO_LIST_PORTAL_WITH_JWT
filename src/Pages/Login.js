@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { loginUser } from "../Routes/ApiRoutes";
+import { useNavigate } from "react-router-dom";
 
 function Login({ handleLogin }) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -18,10 +20,15 @@ function Login({ handleLogin }) {
       const data = await loginUser(email, password);
       setErrorMessage("");
       setSuccessMessage(data.message);
-      handleLogin(data.token, data.user);
+      handleLogin(data.token, data.userData);
+      
       // Clear the form fields
       setEmail("");
       setPassword("");
+      
+      if (data.status === 201) {
+        navigate("/protected");
+      }
     } catch (error) {
       setErrorMessage(error.message);
     }

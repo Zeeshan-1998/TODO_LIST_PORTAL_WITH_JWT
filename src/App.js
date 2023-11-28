@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import {
-  logoutUser,
   getProtectedData,
   createTodo,
   getTodos,
@@ -53,17 +52,13 @@ function App() {
     setToken(token);
     setUserData(user);
     sessionStorage.setItem("token", token); // Store the token in session storage
-    window.location.href = `/protected`; // Navigate to the protected page after successful login
   };
 
   const handleLogout = async () => {
     try {
-      await logoutUser();
       setToken("");
       setUserData(null);
-      sessionStorage.removeItem("token");
       setTodos([]);
-      window.location.href = `/login`;
     } catch (error) {
       console.error(error);
     }
