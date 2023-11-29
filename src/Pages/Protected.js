@@ -28,10 +28,12 @@ function Protected({
 
   const handleLogoutFunction = async () => {
     try {
-      handleLogout();
-      await logoutUser();
-      sessionStorage.removeItem("token");
-      navigate("/login");
+      if (window.confirm("You are about to logout from this application. Are you sure?")) {
+        handleLogout();
+        await logoutUser();
+        sessionStorage.removeItem("token");
+        navigate("/login");
+      }
     } catch (error) {
       console.error(error);
     }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
 import {
   getProtectedData,
   createTodo,
@@ -154,23 +154,28 @@ function App() {
                 </div>
               }
             ></Route>
-            <Route
-              path="/protected"
-              element={
-                <div className="protected-route">
-                  <Protected
-                    token={token}
-                    userData={userData}
-                    handleProtected={handleProtected}
-                    handleLogout={handleLogout}
-                    todos={todos}
-                    handleCreateTodo={handleCreateTodo}
-                    handleUpdateTodo={handleUpdateTodo}
-                    handleDeleteTodo={handleDeleteTodo}
-                  />
-                </div>
-              }
-            ></Route>
+            {token && (
+              <>
+                <Route
+                  path="/protected"
+                  element={
+                    <div className="protected-route">
+                      <Protected
+                        token={token}
+                        userData={userData}
+                        handleProtected={handleProtected}
+                        handleLogout={handleLogout}
+                        todos={todos}
+                        handleCreateTodo={handleCreateTodo}
+                        handleUpdateTodo={handleUpdateTodo}
+                        handleDeleteTodo={handleDeleteTodo}
+                      />
+                    </div>
+                  }
+                ></Route>
+              </>
+            )}
+            {!token && <Route path="*" element={<Navigate to="/" />} />}
           </Routes>
         </div>
         <Footer />
