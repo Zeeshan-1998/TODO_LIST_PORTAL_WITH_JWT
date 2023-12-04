@@ -3,17 +3,77 @@ require('dotenv').config();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const cors = require("cors");
-const { Pool } = require("pg");
 const session = require("express-session");
+const { Sequelize, DataTypes } = require("sequelize");
 
 const app = express();
-const pool = new Pool({
-  user: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
+
+// Sequelize setup
+const sequelize = new Sequelize({
+  dialect: process.env.DB_DIALECT,
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
 });
+
+// Define Users and Todos models
+const User = sequelize.define("User", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  username: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false,
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  email: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false,
+  },
+  created_on: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  }
+},{
+    paranoid: false,
+    timestamps: false,
+});
+
+const Todo = sequelize.define("Todo", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  title: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  updated_at: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+},{
+    paranoid: false,
+    timestamps: false,
+});
+
+// Define associations
+User.hasMany(Todo, { foreignKey: "user_id" });
+Todo.belongsTo(User, { foreignKey: "user_id" });
 
 // Middleware to parse JSON
 app.use(
@@ -41,21 +101,26 @@ app.use(session(sessionOptions));
 const jwtSecretKey = process.env.JWT_SECRET_KEY;
 
 // Middleware to authenticate JWT token
-function authenticateToken(req, res, next) {
+async function authenticateToken(req, res, next) {
   const token = req.session.token;
 
   if (token == null) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  jwt.verify(token, jwtSecretKey, (err, user) => {
-    if (err) {
+  try {
+    const decoded = jwt.verify(token, jwtSecretKey);
+    const user = await User.findByPk(decoded.userId);
+
+    if (!user) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
     req.user = user;
     next();
-  });
+  } catch (err) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
 }
 
 // User registration endpoint
@@ -71,39 +136,25 @@ app.post("/register", async (req, res) => {
     }
 
     // Check if the username or email already exists in the database
+    const usernameExists = await User.findOne({ where: { username } });
+    const emailExists = await User.findOne({ where: { email } });
 
-    // For checking username
-    const usernameExistsQuery = "SELECT * FROM users WHERE username = $1";
-    const usernameValues = [username];
-    const usernameExists = await pool.query(
-      usernameExistsQuery,
-      usernameValues
-    );
-
-    // For checking email
-    const emailExistsQuery = "SELECT * FROM users WHERE email = $1";
-    const emailValues = [email];
-    const emailExists = await pool.query(emailExistsQuery, emailValues);
-
-    if (usernameExists.rows.length > 0) {
+    if (usernameExists) {
       return res.status(400).json({ message: "Username already exists" });
     }
 
-    if (emailExists.rows.length > 0) {
+    if (emailExists) {
       return res.status(400).json({ message: "Email already exists" });
     }
 
     // Hash the password
-    const saltRounds = 12; // Increase the value for higher security
+    const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Store user information in the database
-    const insertUserQuery =
-      "INSERT INTO users (username, password, email) VALUES ($1, $2, $3) RETURNING *";
-    const insertUserValues = [username, hashedPassword, email];
-    const insertedUser = await pool.query(insertUserQuery, insertUserValues);
+    const created_on = new Date().toISOString();
 
-    const user = insertedUser.rows[0];
+    // Store user information in the database
+    const user = await User.create({ username, password: hashedPassword, created_on: created_on, email });
 
     // Generate JWT token
     const token = jwt.sign({ userId: user.id }, jwtSecretKey, {
@@ -113,7 +164,7 @@ app.post("/register", async (req, res) => {
     // Store the token in the session
     req.session.token = token;
 
-    res.status(201).json({ token, user, message: "User Created Successfully"});
+    res.status(201).json({ token, user, message: "User Created Successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
@@ -133,17 +184,13 @@ app.post("/login", async (req, res) => {
     }
 
     // Check if the user exists in the database
-    const getUserQuery = "SELECT * FROM users WHERE email = $1";
-    const values = [email];
-    const result = await pool.query(getUserQuery, values);
-    const user = result.rows[0];
+    const user = await User.findOne({ where: { email } });
 
     const userData = {};
 
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
-    }
-    else {
+    } else {
       userData.username = user.username;
       userData.email = user.email;
     }
@@ -184,20 +231,17 @@ app.get("/logout", (req, res) => {
 app.post("/todos", authenticateToken, async (req, res) => {
   try {
     const { title } = req.body;
-    const userId = req.user.userId;
+    const userId = req.user.id; // Use req.user.id instead of req.user.userId
 
     // Validate user input
     if (!title) {
       return res.status(400).json({ message: "Please provide a title" });
     }
 
-    // Insert the todo item into the database
-    const insertTodoQuery =
-      "INSERT INTO todos (title, user_id) VALUES ($1, $2) RETURNING *";
-    const insertTodoValues = [title, userId];
-    const insertedTodo = await pool.query(insertTodoQuery, insertTodoValues);
+    const created_at = new Date().toISOString();
 
-    const todo = insertedTodo.rows[0];
+    // Insert the todo item into the database
+    const todo = await Todo.create({ title, user_id: userId, created_at: created_at });
 
     res.status(201).json({ todo });
   } catch (error) {
@@ -209,13 +253,10 @@ app.post("/todos", authenticateToken, async (req, res) => {
 // Get all todo items for the authenticated user
 app.get("/todos", authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.id; // Use req.user.id instead of req.user.userId
 
     // Retrieve all todo items for the user from the database
-    const getTodosQuery = "SELECT * FROM todos WHERE user_id = $1";
-    const getTodosValues = [userId];
-    const result = await pool.query(getTodosQuery, getTodosValues);
-    const todos = result.rows;
+    const todos = await Todo.findAll({ where: { user_id: userId } });
 
     res.json({ todos });
   } catch (error) {
@@ -229,33 +270,26 @@ app.put("/todos/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { title } = req.body;
-    const userId = req.user.userId;
+    const userId = req.user.id; // Use req.user.id instead of req.user.userId
 
     // Validate user input
     if (!title) {
       return res.status(400).json({ message: "Please provide a title" });
     }
 
+    const updated_at = new Date().toISOString();
+
     // Check if the todo item exists and belongs to the user
-    const getTodoQuery = "SELECT * FROM todos WHERE id = $1 AND user_id = $2";
-    const getTodoValues = [id, userId];
-    const result = await pool.query(getTodoQuery, getTodoValues);
-    const todo = result.rows[0];
+    const todo = await Todo.findOne({ where: { id, user_id: userId } });
 
     if (!todo) {
       return res.status(404).json({ message: "Todo item not found" });
     }
 
-    // For Update time on every update
-    const updated_at = new Date().toISOString();
-
     // Update the todo item in the database
-    const updateTodoQuery =
-      "UPDATE todos SET title = $1, updated_at = $2 WHERE id = $3 AND user_id = $4 RETURNING *";
-    const updateTodoValues = [title, updated_at, id, userId];
-    const updatedTodo = await pool.query(updateTodoQuery, updateTodoValues);
+    const updatedTodo = await todo.update({ title, updated_at: updated_at });
 
-    res.json({ todo: updatedTodo.rows[0] });
+    res.json({ todo: updatedTodo });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
@@ -266,22 +300,17 @@ app.put("/todos/:id", authenticateToken, async (req, res) => {
 app.delete("/todos/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.userId;
+    const userId = req.user.id; // Use req.user.id instead of req.user.userId
 
     // Check if the todo item exists and belongs to the user
-    const getTodoQuery = "SELECT * FROM todos WHERE id = $1 AND user_id = $2";
-    const getTodoValues = [id, userId];
-    const result = await pool.query(getTodoQuery, getTodoValues);
-    const todo = result.rows[0];
+    const todo = await Todo.findOne({ where: { id, user_id: userId } });
 
     if (!todo) {
       return res.status(404).json({ message: "Todo item not found" });
     }
 
     // Delete the todo item from the database
-    const deleteTodoQuery = "DELETE FROM todos WHERE id = $1 AND user_id = $2";
-    const deleteTodoValues = [id, userId];
-    await pool.query(deleteTodoQuery, deleteTodoValues);
+    await todo.destroy();
 
     res.json({ message: "Todo item deleted successfully" });
   } catch (error) {
@@ -293,13 +322,10 @@ app.delete("/todos/:id", authenticateToken, async (req, res) => {
 // Protected route
 app.get("/protected", authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.id; // Use req.user.id instead of req.user.userId
 
     // Retrieve user-specific data from the database based on the user ID
-    const getUserQuery = "SELECT * FROM users WHERE id = $1";
-    const values = [userId];
-    const result = await pool.query(getUserQuery, values);
-    const user = result.rows[0];
+    const user = await User.findByPk(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -314,6 +340,8 @@ app.get("/protected", authenticateToken, async (req, res) => {
 });
 
 // Start the server
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+sequelize.authenticate().then(() => {
+  app.listen(5000, () => {
+    console.log("Server running on port 5000");
+  });
 });
