@@ -1,0 +1,34 @@
+-- Create Table for Books
+CREATE TABLE books (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  author VARCHAR(255) NOT NULL,
+  no_of_pages INTEGER NOT NULL,
+  published_at DATE NOT NULL
+);
+
+-- Create Table for users
+CREATE TABLE users (
+  id INT IDENTITY(1,1) PRIMARY KEY,
+  username NVARCHAR(255) UNIQUE NOT NULL,
+  password NVARCHAR(255) NOT NULL,
+  email NVARCHAR(255) UNIQUE NOT NULL,
+  created_on DATETIME2 DEFAULT GETDATE()
+);
+
+-- Create Table for todos
+CREATE TABLE todos (
+  id INT IDENTITY(1,1) PRIMARY KEY,
+  title NVARCHAR(MAX) NOT NULL,
+  user_id INT NOT NULL,
+  created_at DATETIMEOFFSET DEFAULT SYSDATETIMEOFFSET(),
+  updated_at DATETIMEOFFSET DEFAULT SYSDATETIMEOFFSET(),
+  FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+
+SELECT * FROM BOOKS;
+SELECT * FROM USERS;
+SELECT * FROM TODOS;
+
+
